@@ -9,7 +9,7 @@
 
 ## What is Bevy?
 
-Bevy is a refreshingly simple data-driven game engine built in Rust. It is free and open-source forever!
+Bevy is a refreshingly simple data-driven game engine built in Rust. It is free and open-source forever! TEST
 
 ## WARNING
 
