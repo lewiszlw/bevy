@@ -667,12 +667,6 @@ pub struct InternalWindowState {
     maximize_request: Option<bool>,
     /// Unscaled cursor position.
     physical_cursor_position: Option<DVec2>,
-    /// The window's current theme
-    ///
-    /// ## Platform-specific
-    ///
-    /// Ignored on iOS, Android, and Web.
-    window_theme: Option<WindowTheme>,
 }
 
 impl InternalWindowState {
