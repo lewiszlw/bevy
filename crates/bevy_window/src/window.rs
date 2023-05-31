@@ -118,17 +118,17 @@ pub struct Window {
     ///
     /// (Decorations are the minimize, maximize, and close buttons on desktop apps)
     ///
-    //  ## Platform-specific
-    //
-    //  **`iOS`**, **`Android`**, and the **`Web`** do not have decorations.
+    ///  ## Platform-specific
+    ///
+    ///  **iOS / Android / Web:** Decorations not supported.
     pub decorations: bool,
     /// Should the window be transparent?
     ///
     /// Defines whether the background of the window should be transparent.
     ///
     /// ## Platform-specific
-    /// - iOS / Android / Web: Unsupported.
-    /// - macOS X: Not working as expected.
+    /// **iOS / Android / Web:** Unsupported.
+    /// **macOS X:** Not working as expected.
     ///
     /// macOS X transparent works with winit out of the box, so this issue might be related to: <https://github.com/gfx-rs/wgpu/issues/687>.
     /// You should also set the window `composite_alpha_mode` to `CompositeAlphaMode::PostMultiplied`.
@@ -139,7 +139,7 @@ pub struct Window {
     ///
     /// ## Platform-specific
     ///
-    /// - iOS / Android / Web / Wayland: Unsupported.
+    /// **iOS / Android / Web / Wayland:** Unsupported.
     pub window_level: WindowLevel,
     /// The "html canvas" element selector.
     ///
@@ -176,13 +176,13 @@ pub struct Window {
     ///
     ///  ## Platform-specific
     ///
-    /// - iOS / Android / Web: Unsupported.
+    /// **iOS / Android / Web:** Unsupported.
     pub ime_enabled: bool,
     /// Sets location of IME candidate box in client area coordinates relative to the top left.
     ///
     ///  ## Platform-specific
     ///
-    /// - iOS / Android / Web: Unsupported.
+    /// **iOS / Android / Web:** Unsupported.
     pub ime_position: Vec2,
     /// Sets a specific theme for the window.
     ///
@@ -190,7 +190,7 @@ pub struct Window {
     ///
     /// ## Platform-specific
     ///
-    /// Ignored on iOS, Android, and Web.
+    /// **iOS / Android / Web:** Unsupported.
     pub window_theme: Option<WindowTheme>,
 }
 
@@ -404,7 +404,7 @@ pub struct Cursor {
     ///
     /// ## Platform-specific
     ///
-    /// - iOS / Android / Web / X11: Unsupported.
+    /// **iOS / Android / Web / X11:** Unsupported.
     pub hit_test: bool,
 }
 
