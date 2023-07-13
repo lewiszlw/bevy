@@ -56,6 +56,8 @@ impl VolumeLevel {
 /// How should Bevy manage the sound playback?
 #[derive(Debug, Clone, Copy)]
 pub enum PlaybackMode {
+    /// TODO: document
+    Manually,
     /// Play the sound once. Do nothing when it ends.
     Once,
     /// Repeat the sound forever.
@@ -119,6 +121,13 @@ impl PlaybackSettings {
     /// Will play the associated audio source once and remove the audio components afterwards.
     pub const REMOVE: PlaybackSettings = PlaybackSettings {
         mode: PlaybackMode::Remove,
+        volume: Volume::Relative(VolumeLevel(1.0)),
+        speed: 1.0,
+        paused: false,
+    };
+
+    pub const MANUALLY: PlaybackSettings = PlaybackSettings {
+        mode: PlaybackMode::Manually,
         volume: Volume::Relative(VolumeLevel(1.0)),
         speed: 1.0,
         paused: false,
@@ -249,4 +258,9 @@ where
     pub settings: PlaybackSettings,
     /// Spatial audio configuration. Specifies the positions of the source and listener.
     pub spatial: SpatialSettings,
+}
+
+#[derive(Event, Debug)]
+pub struct RequestAudioPlayback {
+    pub audio: Entity,
 }

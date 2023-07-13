@@ -1,10 +1,10 @@
 use crate::{
-    AudioSourceBundle, Decodable, GlobalVolume, PlaybackMode, PlaybackSettings, SpatialAudioSink,
-    SpatialAudioSourceBundle, SpatialSettings, Volume,
+    AudioSourceBundle, Decodable, GlobalVolume, PlaybackMode, PlaybackSettings,
+    RequestAudioPlayback, SpatialAudioSink, SpatialAudioSourceBundle, SpatialSettings, Volume,
 };
 use bevy_asset::{Asset, Assets, Handle};
 use bevy_ecs::prelude::*;
-use bevy_utils::tracing::warn;
+use bevy_utils::tracing::{warn, info};
 use rodio::{OutputStream, OutputStreamHandle, Sink, Source, SpatialSink};
 
 use crate::AudioSink;
@@ -72,6 +72,16 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
         ),
         (Without<AudioSink>, Without<SpatialAudioSink>),
     >,
+    query_playing: Query<
+        (
+            Entity,
+            &Handle<Source>,
+            &PlaybackSettings,
+            Option<&SpatialSettings>,
+        ),
+        Or<(With<AudioSink>, With<SpatialAudioSink>)>,
+    >,
+    mut request_audio_playback_er: EventReader<RequestAudioPlayback>,
     mut commands: Commands,
 ) where
     f32: rodio::cpal::FromSample<Source::DecoderItem>,
@@ -135,6 +145,7 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
                                         PlaybackRemoveMarker,
                                     ));
                             }
+                            PlaybackMode::Manually => {}
                         };
                     }
                     Err(err) => {
@@ -184,6 +195,7 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
                                     // PERF: insert as bundle to reduce archetype moves
                                     .insert((AudioSink { sink: Some(sink) }, PlaybackRemoveMarker));
                             }
+                            PlaybackMode::Manually => {}
                         };
                     }
                     Err(err) => {
@@ -191,6 +203,83 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
                     }
                 }
             }
+        }
+    }
+
+    for event in request_audio_playback_er.iter() {
+        info!("Received request audio playback event: {:?}", event);
+        let query_item = query_nonplaying
+            .get(event.audio)
+            .or(query_playing.get(event.audio));
+        if let Ok((entity, source_handle, settings, spatial)) = query_item {
+
+            if let Some(audio_source) = audio_sources.get(source_handle) {
+                // audio data is available (has loaded), begin playback and insert sink component
+                if let Some(spatial) = spatial {
+                    match SpatialSink::try_new(
+                        stream_handle,
+                        spatial.emitter,
+                        spatial.left_ear,
+                        spatial.right_ear,
+                    ) {
+                        Ok(sink) => {
+                            sink.set_speed(settings.speed);
+                            match settings.volume {
+                                Volume::Relative(vol) => {
+                                    sink.set_volume(vol.0 * global_volume.volume.0);
+                                }
+                                Volume::Absolute(vol) => sink.set_volume(vol.0),
+                            }
+                            if settings.paused {
+                                sink.pause();
+                            }
+                            match settings.mode {
+                                PlaybackMode::Manually => {
+                                    sink.append(audio_source.decoder());
+                                    commands
+                                        .entity(entity)
+                                        .insert((SpatialAudioSink { sink: Some(sink) },));
+                                }
+                                _ => {}
+                            };
+                        }
+                        Err(err) => {
+                            warn!("Error playing spatial sound: {err:?}");
+                        }
+                    }
+                } else {
+                    info!("settings: {:?}", settings);
+                    match Sink::try_new(stream_handle) {
+                        Ok(sink) => {
+                            sink.set_speed(settings.speed);
+                            match settings.volume {
+                                Volume::Relative(vol) => {
+                                    sink.set_volume(vol.0 * global_volume.volume.0);
+                                }
+                                Volume::Absolute(vol) => sink.set_volume(vol.0),
+                            }
+                            if settings.paused {
+                                sink.pause();
+                            }
+                            match settings.mode {
+                                PlaybackMode::Manually => {
+                                    sink.append(audio_source.decoder());
+                                    commands.entity(entity).remove::<AudioSink>();
+                                    commands
+                                        .entity(entity)
+                                        .insert(AudioSink { sink: Some(sink) });
+                                }
+                                _ => {}
+                            };
+                        }
+                        Err(err) => {
+                            warn!("Error playing sound: {err:?}");
+                        }
+                    }
+                }
+            }
+        } else {
+            warn!("No audio source found for entity: {:?}", event.audio);
         }
     }
 }
