@@ -14,7 +14,7 @@ fn main() {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         AudioBundle {
-            source: asset_server.load("sounds/breakout_collision.ogg"),
+            source: asset_server.load("sounds/Windless Slopes.ogg"),
             settings: PlaybackSettings::MANUALLY,
             ..default()
         },
@@ -32,7 +32,6 @@ fn playback(
 ) {
     if keyboard_input.just_pressed(KeyCode::F1) {
         if let Ok(entity) = music_controller.get_single() {
-            info!("Requesting audio playback");
             request_audio_playback_ew.send(RequestAudioPlayback { audio: entity });
         }
     }

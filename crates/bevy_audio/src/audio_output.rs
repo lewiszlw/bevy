@@ -78,6 +78,8 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
             &Handle<Source>,
             &PlaybackSettings,
             Option<&SpatialSettings>,
+            Option<&AudioSink>,
+            Option<&SpatialAudioSink>,
         ),
         Or<(With<AudioSink>, With<SpatialAudioSink>)>,
     >,
@@ -207,12 +209,10 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
     }
 
     for event in request_audio_playback_er.iter() {
-        info!("Received request audio playback event: {:?}", event);
         let query_item = query_nonplaying
             .get(event.audio)
             .or(query_playing.get(event.audio));
-        if let Ok((entity, source_handle, settings, spatial)) = query_item {
-
+        if let Ok((entity, source_handle, settings, spatial, sink, spatial_sink)) = query_item {
             if let Some(audio_source) = audio_sources.get(source_handle) {
                 // audio data is available (has loaded), begin playback and insert sink component
                 if let Some(spatial) = spatial {
@@ -248,7 +248,6 @@ pub(crate) fn play_queued_audio_system<Source: Asset + Decodable>(
                         }
                     }
                 } else {
-                    info!("settings: {:?}", settings);
                     match Sink::try_new(stream_handle) {
                         Ok(sink) => {
                             sink.set_speed(settings.speed);
